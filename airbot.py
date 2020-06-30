@@ -16,10 +16,11 @@ def main():
     parser = argparse.ArgumentParser(description="Tool for bumping up airbnb listings" \
             "by editing their description")
     parser.add_argument("--dryrun", dest="dryrun", action="store_true", help="Perform a dry run")
+    parser.add_argument("--headless", dest="headless", action="store_true", help="Headless run")
     args = parser.parse_args()
 
     airBot = AirBot()
-    airBot.setup(dry_run=args.dryrun)
+    airBot.setup(dry_run=args.dryrun, headless=args.headless)
     airBot.checkLoggedin()
 
     listing_urls = airBot.getListings()
@@ -30,7 +31,7 @@ def main():
 
 
 class AirBot():
-    def setup(self, dry_run=True):
+    def setup(self, dry_run=True, headless=False):
         """ Start WebDriver """
         ## self.getCreds() (use commandline arguments or a creds file)
         self.dry_run = dry_run
@@ -38,7 +39,8 @@ class AirBot():
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("user-data-dir=selenium")
         chrome_options.add_argument('--no-sandbox')
-        #chrome_options.add_argument('--headless')
+        if (headless):
+            chrome_options.add_argument('--headless')
         chrome_options.add_argument('--disable-gpu')
         self.driver = webdriver.Chrome(chrome_options=chrome_options)
 
