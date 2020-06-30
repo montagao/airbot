@@ -4,7 +4,9 @@ Simple tool for automatically updating all your airbnb listings so they get bump
 
 ### Dependencies
 Uses `selenium` and `geckodriver`
+
 `pip install --user geckodriver`
+
 `pip install --user selenium`
 
 
