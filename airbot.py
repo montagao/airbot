@@ -92,6 +92,8 @@ class AirBot():
 
 
         access_summary.clear()
+        # hacky but should fix issue of the form not getting cleared properly
+        time.sleep(2)
         access_summary.send_keys(updated_access_summary)
 
         print('Updated guest access info: \n```\n' + access_summary.text + ' \n```')
