@@ -1,27 +1,39 @@
 import time
+import argparse
 
 from getpass import getpass
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import TimeoutException
+
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as cond
+from selenium.webdriver.common.by import By
 
 def main():
+    parser = argparse.ArgumentParser(description="Tool for bumping up airbnb listings" \
+            "by editing their description")
+    parser.add_argument("--dryrun", dest="dryrun", action="store_true", help="Perform a dry run")
+    args = parser.parse_args()
+
     airBot = AirBot()
-    airBot.setup()
+    airBot.setup(dry_run=args.dryrun)
+    airBot.checkLoggedin()
+
     listing_urls = airBot.getListings()
 
     for listing in listing_urls:
         airBot.editListingDescription(listing)
+    print("all listings updated!")
 
 
 class AirBot():
-    def setup(self):
+    def setup(self, dry_run=True):
         """ Start WebDriver """
         ## self.getCreds() (use commandline arguments or a creds file)
-        self.email = ""
-        self.pw = ""
-        self.dry_run = True
+        self.dry_run = dry_run
 
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("user-data-dir=selenium")
@@ -100,30 +112,21 @@ class AirBot():
         """ Stop Web Driver """
         return
 
-    def getCreds(self):
-        print("Please enter your email:")
-        self.email = input()
-        self.pw = getpass()
 
-    def login(self):
+    def checkLoggedin(self):
         self.driver.get("https://www.airbnb.ca/login?redirect_url=%2Fhosting")
-        email_login_button = self.driver.find_element_by_class_name('_bema73j')
-        email_login_button.click()
-
-        print(self.email)
-
-        email_form = self.driver.find_element_by_name('email')
-        email_form.send_keys(self.email)
-
-
-        pw_form = self.driver.find_element_by_name('password')
-        pw_form.send_keys(self.pw)
-
-
-        pw_form.submit()
-
-
-
+        email_login_button = self.driver.find_elements_by_class_name('_bema73j')
+        if (len(email_login_button) != 0):
+            print('(First time setup) Please login manually...')
+            try:
+                # waiting for initial one time login
+                WebDriverWait(self.driver, 60).until(cond.presence_of_element_located((By.XPATH, '//button[@aria-label="Open hosting menu"]')))
+                print("logged in successfully, thanks")
+            except (TimeoutException) as py_ex:
+                print("failed to login. (timed out)")
+                self.tearDown()
+        else:
+            print("Already logged in.")
 
 
 if __name__ == "__main__":
